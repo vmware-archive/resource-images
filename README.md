@@ -14,7 +14,9 @@ example, a `sha` identifying a commit of a `git` resource.
 ### `/tmp/resource/check`: Check for new sources.
 
 A resource type's `/check` script is invoked to detect new sources. It is
-given a current source as a point of reference on stdin.
+given a current source as a point of reference on stdin. Note that the given
+source may be missing the precise version, if for example this is the first
+time the resource has been used.
 
 For example, here's what the input for a `git` resource may look like:
 
@@ -25,6 +27,9 @@ For example, here's what the input for a `git` resource may look like:
   "ref": "61cebfdb274da579de4287347967b580d02d31e3"
 }
 ```
+
+In this case, `ref` may be omitted if there is no absolute point of reference.
+The expected behavior of any resource is to return the most recent source.
 
 The script should then output a list of all sources after `current`, in order:
 
