@@ -1,0 +1,31 @@
+#!/bin/bash
+# vim: set ft=sh
+
+set -e -x
+
+destination=$1
+
+if [ -z "$destination" ]; then
+  echo "usage: $0 <path/to/destination>" >&2
+  exit 1
+fi
+
+# for jq
+PATH=/usr/local/bin:$PATH
+
+payload=$(mktemp /tmp/resource-in.XXXXX)
+
+cat > $payload <&0
+
+uri=$(jq -r '.uri // ""' < $payload)
+
+if [ -z "$uri" ]; then
+  echo "invalid payload (missing uri):" >&2
+  cat $payload >&2
+  exit 1
+fi
+
+mkdir -p $destination
+curl $uri | tar zxf - -C $destination
+
+cat $payload
