@@ -53,10 +53,15 @@ The list may be empty, if for example the given source is already the latest.
 ### `/tmp/resource/in`: Fetch a given source.
 
 The `/in` script is passed a destination directory as `$1`, and is given
-a source from of the resource on stdin. The source passed in is entirely
-determined by the output of `/check`.
+a source from of the resource on stdin. The source passed in may be the output
+of `/check`, or a more open-ended source provided by user configuration (i.e.
+containing a git branch but not a SHA).
 
-For a `git` resource this will typically be something like:
+Because the input may be open-ended, the `/in` script must print out the
+source that it fetched. This allows the upstream to not have to perform
+`/check` before `/in`, which can be slow (for git it implies two clones).
+
+For a `git` resource the input source will typically be something like:
 
 ```json
 {
@@ -66,4 +71,15 @@ For a `git` resource this will typically be something like:
 }
 ```
 
-The script should fetch the source and place it in the given directory.
+...but it could also just be:
+
+```json
+{
+  "uri": "https://github.com/some/repo.git"
+}
+```
+
+...if that's all the user specified in configuration, and they've directly
+triggered a build.
+
+The script must fetch the source and place it in the given directory.
