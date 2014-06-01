@@ -1,85 +1,125 @@
 # Winston Resource Images
 
 A resource type identifies abstractly how to pull down, push up, and check for
-new source of some external resource.
+new versions of some external resource.
 
-For example, the `git` resource type can handle cloning repos, and checking
-for new commits.
-
-A source is defined to be a concrete manifestation of a logical resource: for
-example, a `sha` identifying a commit of a `git` resource.
+For example, the `git` resource type handles cloning repos, checking for new
+commits, and pushing code to branches.
 
 ## Anatomy of a Resource
 
-### `/tmp/resource/check`: Check for new sources.
+### `/tmp/resource/check`: Check for new versions.
 
-A resource type's `/check` script is invoked to detect new sources. It is
-given a current source as a point of reference on stdin. Note that the given
-source may be missing the precise version, if for example this is the first
-time the resource has been used.
+A resource type's `/check` script is invoked to detect new versions of the
+resource. It is given the configured source and current version as a point of
+reference on stdin. Note that the current version will be missing if this is
+the first time the resource has been used. The expected behavior with no
+version specified is to return the most recent version (*not* every version
+since the resource's inception).
 
 For example, here's what the input for a `git` resource may look like:
 
 ```json
 {
-  "uri": "...",
-  "branch": "develop",
-  "ref": "61cebfdb274da579de4287347967b580d02d31e3"
+  "source": {
+    "uri": "...",
+    "branch": "develop",
+    "private_key": "..."
+  },
+  "version": { "ref": "61cebfdb274da579de4287347967b580d02d31e3" }
 }
 ```
 
-In this case, `ref` may be omitted if there is no absolute point of reference.
-The expected behavior of any resource is to return the most recent source.
-
-The script should then output a list of all sources after `current`, in order:
+The script should then output a list of all versions after `version`, in order:
 
 ```json
 [
-  {
-    "uri": "...",
-    "branch": "develop",
-    "ref": "d74e0124818939e857f503734fdb0e7ea5f3b20c"
-  },
-  {
-    "uri": "...",
-    "branch": "develop",
-    "ref": "7154febfa9b398361dcbd56566a161c35e7c5186"
-  }
+  { "ref": "d74e0124818939e857f503734fdb0e7ea5f3b20c" },
+  { "ref": "7154febfa9b398361dcbd56566a161c35e7c5186" }
 ]
 ```
 
-The list may be empty, if for example the given source is already the latest.
+The list may be empty, if the given version is already the latest.
 
-### `/tmp/resource/in`: Fetch a given source.
+### `/tmp/resource/in`: Fetch a given resource.
 
-The `/in` script is passed a destination directory as `$1`, and is given
-a source from of the resource on stdin. The source passed in may be the output
-of `/check`, or a more open-ended source provided by user configuration (i.e.
-containing a git branch but not a SHA).
+The `/in` script is passed a destination directory as `$1`, and is given on
+stdin the configured source and, optionally, a precise version of the resource
+to fetch.
 
-Because the input may be open-ended, the `/in` script must print out the
-source that it fetched. This allows the upstream to not have to perform
+The script must fetch the resource and place it in the given directory.
+
+Because the input may not specify a version, the `/in` script must print out
+the version that it fetched. This allows the upstream to not have to perform
 `/check` before `/in`, which can be slow (for git it implies two clones).
 
-For a `git` resource the input source will typically be something like:
+Additionally, the script may emit metadata as a list of key-value pairs. This
+data is intended for public consumption and will make it upstream, intended to
+be shown on the build's page.
+
+Example input, in this case for the `git` resource:
 
 ```json
 {
-  "uri": "https://github.com/some/repo.git",
-  "branch": "develop",
-  "sha": "deadbeef"
+  "source": {
+    "uri": "...",
+    "branch": "develop",
+    "private_key": "..."
+  },
+  "version": { "ref": "61cebfdb274da579de4287347967b580d02d31e3" }
 }
 ```
 
-...but it could also just be:
+Note that the `version` may be `null`.
+
+Example output:
 
 ```json
 {
-  "uri": "https://github.com/some/repo.git"
+  "version": { "ref": "61cebfdb274da579de4287347967b580d02d31e3" },
+  "metadata": [
+    { "name": "commit", "value": "61cebfdb274da579de4287347967b580d02d31e3" },
+    { "name": "author", "value": "Hulk Hogan" }
+  ]
 }
 ```
 
-...if that's all the user specified in configuration, and they've directly
-triggered a build.
+### `/tmp/resource/out`: Update a resource.
 
-The script must fetch the source and place it in the given directory.
+The `/out` script is passed a source directory as `$1`, and is given on stdin
+the configured params. The source directory is as it was at the end of the
+build, so it may be dirty; the intention is to allow the build to generate
+artifacts, and `/out` takes them and ships them.
+
+The script must emit a resulting version of the resource. This can be the same
+version if nothing actually changed, but for `git` it's the pushed SHA.
+
+Additionally, the script may emit metadata as a list of key-value pairs. This
+data is intended for public consumption and will make it upstream, intended to
+be shown on the build's page.
+
+Example input, in this case for the `git` resource:
+
+```json
+{
+  "params": {
+    "remote": "git@....",
+    "branch": "develop",
+    "private_key": "..."
+  }
+}
+```
+
+Note that the `version` may be `null`.
+
+Example output:
+
+```json
+{
+  "version": { "ref": "61cebfdb274da579de4287347967b580d02d31e3" },
+  "metadata": [
+    { "name": "commit", "value": "61cebfdb274da579de4287347967b580d02d31e3" },
+    { "name": "author", "value": "Mick Foley" }
+  ]
+}
+```
