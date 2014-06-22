@@ -86,13 +86,13 @@ Example output:
 
 ### `/tmp/resource/out`: Update a resource.
 
-The `/out` script is passed a source directory as `$1`, and is given on stdin
-the configured params. The source directory is as it was at the end of the
-build, so it may be dirty; the intention is to allow the build to generate
-artifacts, and `/out` takes them and ships them.
+The `/out` script is called with a path to the directory containing the build's
+full set of sources as the first argument, and is given on stdin the configured
+params and the resource's source information. The source directory is as it was
+at the end of the build.
 
-The script must emit a resulting version of the resource. This can be the same
-version if nothing actually changed, but for `git` it's the pushed SHA.
+The script must emit the resulting version of the resource. For example, the
+`git` resource emits the sha of the commit that it just pushed.
 
 Additionally, the script may emit metadata as a list of key-value pairs. This
 data is intended for public consumption and will make it upstream, intended to
@@ -103,14 +103,14 @@ Example input, in this case for the `git` resource:
 ```json
 {
   "params": {
-    "remote": "git@....",
     "branch": "develop",
-    "private_key": "..."
+  },
+  "source": {
+    "uri": "git@...",
+    "private_key": "...",
   }
 }
 ```
-
-Note that the `version` may be `null`.
 
 Example output:
 
