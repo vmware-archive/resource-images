@@ -1,4 +1,4 @@
-# Winston Resource Images
+# Concourse Resource Interface
 
 A resource type identifies abstractly how to pull down, push up, and check for
 new versions of some external resource.
