@@ -8,7 +8,7 @@ commits, and pushing code to branches.
 
 ## Anatomy of a Resource
 
-### `/tmp/resource/check`: Check for new versions.
+### `/opt/resource/check`: Check for new versions.
 
 A resource type's `/check` script is invoked to detect new versions of the
 resource. It is given the configured source and current version as a point of
@@ -41,7 +41,7 @@ The script should then output a list of all versions after `version`, in order:
 
 The list may be empty, if the given version is already the latest.
 
-### `/tmp/resource/in`: Fetch a given resource.
+### `/opt/resource/in`: Fetch a given resource.
 
 The `/in` script is passed a destination directory as `$1`, and is given on
 stdin the configured source and, optionally, a precise version of the resource
@@ -84,7 +84,7 @@ Example output:
 }
 ```
 
-### `/tmp/resource/out`: Update a resource.
+### `/opt/resource/out`: Update a resource.
 
 The `/out` script is called with a path to the directory containing the build's
 full set of sources as the first argument, and is given on stdin the configured
