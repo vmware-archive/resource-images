@@ -11,11 +11,12 @@ commits, and pushing code to branches.
 ### `/opt/resource/check`: Check for new versions.
 
 A resource type's `/check` script is invoked to detect new versions of the
-resource. It is given the configured source and current version as a point of
-reference on stdin. Note that the current version will be missing if this is
-the first time the resource has been used. The expected behavior with no
-version specified is to return the most recent version (*not* every version
-since the resource's inception).
+resource. It is given the configured source and current version on stdin, and
+must print the array of new versions, in chronological order, to stdout.
+
+Note that the current version will be missing if this is the first time the
+resource has been used. In this case, the script should emit only the most
+recent version, *not* every version since the resource's inception.
 
 For example, here's what the input for a `git` resource may look like:
 
@@ -30,7 +31,7 @@ For example, here's what the input for a `git` resource may look like:
 }
 ```
 
-The script should then output a list of all versions after `version`, in order:
+And the output, assuming `d74e01...` is the commit immediately after `61cbef`:
 
 ```json
 [
