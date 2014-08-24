@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # vim: set ft=sh
 
 set -e
@@ -29,6 +29,6 @@ if [ -z "$uri" ]; then
 fi
 
 mkdir -p $destination
-curl $uri | tar zxf - -C $destination
+wget -O - $uri | tar zxf - -C $destination
 
 echo '{}' >&3
