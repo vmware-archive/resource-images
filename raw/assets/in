@@ -29,6 +29,6 @@ if [ -z "$uri" ]; then
 fi
 
 mkdir -p $destination
-wget -O - $uri | tar zxf - -C $destination
+wget -O - $uri | gunzip | tar xf - -C $destination
 
 echo '{}' >&3
